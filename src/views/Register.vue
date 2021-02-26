@@ -61,7 +61,7 @@ export default {
     post_login(user){
       if( !(user.password == "" || user.email == "" || user.name == "")){
         console.log(user)
-        axios.post('http://backend.farsbot.de/register', {
+        axios.post('http://127.0.0.1:5000/register', {
           headers: {'Content-Type': 'application/json'},
           user
         })

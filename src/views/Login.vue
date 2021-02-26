@@ -60,7 +60,7 @@ import user_store from '../store/user'
     post_login: function(user){
     
       if( !(user.password == "" || user.email == "")){
-        axios.post('http://backend.farsbot.de/login', {
+        axios.post('http://127.0.0.1:5000/login', {
           headers: {'Content-Type': 'application/json'},
             user
           })

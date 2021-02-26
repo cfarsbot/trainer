@@ -187,7 +187,7 @@ export default {
         var user = user_store.getters.user
         console.log(data)
         if(data != ""){
-          axios.put('http://backend.farsbot.de/create_wordlist', {
+          axios.put('http://127.0.0.1:5000/create_wordlist', {
             headers: {'Content-Type': 'application/json'},
             data,
             user,
@@ -204,7 +204,7 @@ export default {
       // list_id: id of the list about to be deleted
       deleteList(list_id){
         var user = user_store.getters.user
-          axios.delete('http://backend.farsbot.de/wordlist', {                        
+          axios.delete('http://127.0.0.1:5000/wordlist', {                        
             data:{ list_id, user}
             })
             .then( response => {
@@ -217,7 +217,7 @@ export default {
 
       getList(){
         var user = user_store.getters.user
-        axios.post('http://backend.farsbot.de/wordlist', {
+        axios.post('http://127.0.0.1:5000/wordlist', {
           headers: {'Content-Type': 'application/json'},
           user
           })
