@@ -14,7 +14,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 mysql = MySQL()
 
-
+# python_bcrypt==0.3.2
 # these should be located in a saperate conf file
 app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
@@ -367,11 +367,17 @@ def deleteEntry(word_id, user_id):
 
 def generatePassword(password):
     salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(password.encode('utf8'), salt)
-    return(hashed)
+    return bcrypt.hashpw(password.encode('utf8'), salt)
 
-def checkPassword(password, hashed):
-    return bcrypt.checkpw(password.encode('utf8'), hashed.encode('utf8'))
+
+def checkPassword(password, hashed):   
+    if(bcrypt.checkpw(password.encode('utf8'),hashed.encode('utf8'))):
+        print("password correct")
+        return True
+    else:
+        print("password invalid")
+        return False
+
      
 
 
