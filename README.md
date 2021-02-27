@@ -1,13 +1,13 @@
-# vokabeltrainer_peerox_vue
+# trainer/vue
 
 ## Project setup
 ```
-yarn install
+npm install --legacy-peer-deps
 ```
 
 ### Compiles and hot-reloads for development
 ```
-yarn serve
+npm run serve
 ```
 
 ### Compiles and minifies for production
