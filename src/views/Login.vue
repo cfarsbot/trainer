@@ -27,6 +27,7 @@ import axios from 'axios';
 import Email from '../components/forms/email.vue';
 import Password from '../components/forms/password.vue';
 import user_store from '../store/user'
+import config from '../../config';
 
  export default {
   name: 'Login',
@@ -60,7 +61,7 @@ import user_store from '../store/user'
     post_login: function(user){
     
       if( !(user.password == "" || user.email == "")){
-        axios.post('http://127.0.0.1:5000/login', {
+        axios.post(`https://${config.hostname}/login`, {
           headers: {'Content-Type': 'application/json'},
             user
           })

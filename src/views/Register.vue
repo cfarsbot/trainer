@@ -20,6 +20,7 @@
 
 <script>
 import axios from 'axios';
+import config from '../../config'
 
 import Email from '../components/forms/email.vue';
 import Password from '../components/forms/password.vue';
@@ -30,7 +31,7 @@ import Name from '../components/forms/name.vue';
 
 
 export default {
-  name: 'Login',    
+  name: 'Register',    
   data (){
     return{
       user:{
@@ -55,13 +56,13 @@ export default {
     },
 
     save(){
-      this.post_login(this.user);
+      this.post_register(this.user);
     },
     
-    post_login(user){
+    post_register(user){
       if( !(user.password == "" || user.email == "" || user.name == "")){
         console.log(user)
-        axios.post('http://127.0.0.1:5000/register', {
+        axios.post(`https://${config.hostname}/register`, {
           headers: {'Content-Type': 'application/json'},
           user
         })

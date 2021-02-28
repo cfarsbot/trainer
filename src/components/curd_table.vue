@@ -139,6 +139,7 @@
 </template>
 <script>
 import axios from 'axios'
+import config from '../../config'
 import user_store from '../store/user'
     export default {
       props: ['words', 'list_name', 'list_id'],
@@ -190,7 +191,7 @@ import user_store from '../store/user'
 
       updateWord(word){
         var user = user_store.getters.user
-          axios.patch('http://127.0.0.1:5000/update_wordlist', {
+          axios.patch(`https://${config.hostname}/update_wordlist`, {
                         headers: {'Content-Type': 'application/json'},
                         word,
                         user
@@ -208,7 +209,7 @@ import user_store from '../store/user'
       // creates event to update the component
       addWord(word, list_id){
         var user = user_store.getters.user
-        axios.put('http://127.0.0.1:5000/update_wordlist', {
+        axios.put(`https://${config.hostname}/update_wordlist`, {
           
                         headers: {'Content-Type': 'application/json'},
                         word,
@@ -232,7 +233,7 @@ import user_store from '../store/user'
         var user = user_store.getters.user
                 // axios wants the data to be deleted inside the data Object... https://stackoverflow.com/a/53263784
                 console.log(word)
-                axios.delete('http://127.0.0.1:5000/update_wordlist', {                        
+                axios.delete(`https://${config.hostname}/update_wordlist`, {                        
                         data:{
                           user,
                           word

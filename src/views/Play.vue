@@ -8,6 +8,7 @@
 
 <script>
 import axios from 'axios'
+import config from '../../config'
 //import user_store from '../store/user'
  export default {
     name: 'Login',
@@ -29,7 +30,7 @@ import axios from 'axios'
      methods: {
          getList(){
              //var user = user_store.getters.user
-              axios.post('http://127.0.0.1:5000/play_wordlist', {
+              axios.post(`https://${config.hostname}/play_wordlist`, {
                         headers: {'Content-Type': 'application/json'},
                         user:{
                             id: 2
