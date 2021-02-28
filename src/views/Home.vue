@@ -188,7 +188,7 @@ export default {
         var user = user_store.getters.user
         console.log(data)
         if(data != ""){
-          axios.put(`http://${config.hostname}/create_wordlist`, {
+          axios.put(`https://${config.hostname}/create_wordlist`, {
             headers: {'Content-Type': 'application/json'},
             data,
             user,
@@ -205,7 +205,7 @@ export default {
       // list_id: id of the list about to be deleted
       deleteList(list_id){
         var user = user_store.getters.user
-          axios.delete(`http://${config.hostname}/wordlist`, {                        
+          axios.delete(`https//${config.hostname}/wordlist`, {                        
             data:{ list_id, user}
             })
             .then( response => {
