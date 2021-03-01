@@ -18,6 +18,21 @@ services:
       PMA_USER: root
       PMA_PASSWORD: secret
     ports:
-      - "8080:80"
+      - "3344:80"
+
+  backend:
+    image: python-trainer:latest
+    depends_on: 
+      - mysql-server
+    ports: 
+      - "5000:80"
+
+  frontend:
+    image: vue-trainer:latest
+    depends_on: 
+      - backend
+    ports:
+      - "8080:8080"
+
 volumes:
   mysql-data:
