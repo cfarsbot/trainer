@@ -19,5 +19,10 @@ services:
       PMA_PASSWORD: secret
     ports:
       - "3344:80"
+
+  backend:
+    image: python-trainer:latest
+    ports: 
+      - 5000:5000
 volumes:
   mysql-data:
