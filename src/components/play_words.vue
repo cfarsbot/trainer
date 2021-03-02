@@ -133,6 +133,7 @@ export default {
 </script>
 
 <style scoped>
+/* reset linebrak for long words */
 .fix_line{
   word-break: break-all;
 }
