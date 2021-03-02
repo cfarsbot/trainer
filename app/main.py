@@ -19,15 +19,12 @@ mysql = MySQL()
 app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'secret'
 app.config['MYSQL_DATABASE_DB'] = 'trainer'
-app.config['MYSQL_DATABASE_HOST'] = 'mysql-server'
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
 
 conn = mysql.connect()
 cursor =conn.cursor()
 
-@app.route('/hello')
-def hello():
-    return "Hello", 200
 
 
 # Modifiy single item of a wordlist
@@ -103,15 +100,81 @@ def route_getWordList():
 @app.route('/play_wordlist', methods=['POST'])
 @cross_origin()
 def play():
+    try:
+        body = request.get_json()
+        user_id = body['user']['id']
+        list_id = body['data']['list_id']
+        lang = body['data']['selected_lang']
+    except:
+        return "error", 401
+
     if request.method == 'POST':
-        try:
-            body = request.get_json()
-            user_id = body['user']['id']
-            print(user_id)
-            print(getWordlist(user_id, True)) #Default parameter, retuns shuffled list
-            return "OK", 200
-        except:
-            return "Error", 400
+        return jsonify(getListByID(list_id, lang)), 200
+
+@app.route('/validate_de', methods=['POST'])
+@cross_origin()
+def validate_de():
+    try:
+        body = request.get_json()
+        words = body['words']
+    except:
+        return "error", 401
+    if request.method == 'POST':
+        print(body)
+        print("Validate DE")
+        validation = []
+
+        for word in words:
+            toCheck = word
+            # get array of the correct word
+            correct = getWordByID(toCheck['id'])
+            solution = correct[2] # correct[1] = german word returned from DB
+            if(word['de'] == solution): # userinput is correct
+                print("correct")
+                json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':True}
+                validation.append(json)
+            if(word['de'] != solution): # userinput isn't correct
+                print("wrong")
+                json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':False}
+                validation.append(json)
+
+        
+    return jsonify(validation), 200
+
+@app.route('/validate_en', methods=['POST'])
+@cross_origin()
+def validate_en():
+    try:
+        body = request.get_json()
+        words = body['words']
+    except:
+        return "error", 401
+    if request.method == 'POST':
+        print(body)
+        print("Validate EN")
+        validation = []
+
+        for word in words:
+            toCheck = word
+            # get array of the correct word
+            correct = getWordByID(toCheck['id'])
+            solution = correct[1]
+            # correct[1] = english word returned from DB
+            if(word['en'] == solution): # userinput is correct
+                print("correct")
+                json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':True}
+                validation.append(json)
+            if(word['en'] != solution): # userinput isn't correct
+                print("wrong")
+                json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':False}
+                validation.append(json)
+
+        
+    return jsonify(validation), 200
+
+       # getWordByID()
+        # we wanna check if the English input is correct
+
 
             
 
@@ -239,8 +302,14 @@ def register():
             conn.commit()
             del(data)
 
-        return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
+        return ({'success':True}), 200, {'ContentType':'application/json'} 
 
+
+def getWordByID(word_id):
+    select_word = """ SELECT * FROM wordlists_entrys WHERE entry_id = %s """
+    cursor.execute(select_word, word_id)
+    result = cursor.fetchall()[0]
+    return result
 
 
 def getWordlist(user_id):
@@ -257,7 +326,7 @@ def getWordlist(user_id):
         list_name = data[i][2] #    3. Elem in table
          
         # bulid JSON, add it to the wordlist
-        json = { "list_name":list_name, "list_id":list_id ,"array":getEntrys(list_id)}
+        json = { "list_name":list_name, "list_id":list_id ,"array":getListByID(list_id)}
         final_wordlist.append(json)
         
 
@@ -266,24 +335,56 @@ def getWordlist(user_id):
     return jsonify(final_wordlist)
 
 
-def getEntrys(list_id):
+def getListByID(list_id, lang=None):
    
+    selected_lang = "*"
+    if(lang != None):
+        if(lang == 0):
+            select_wordlist_index = """ (SELECT word_de, entry_id FROM wordlists_entrys WHERE list_id = %s) """
+            cursor.execute(select_wordlist_index, list_id)
+            result = cursor.fetchall()
 
-    select_wordlist_index = """ (SELECT * FROM wordlists_entrys WHERE list_id = %s) """ #get all member of the array list_id
-    cursor.execute(select_wordlist_index, list_id)
-    data = cursor.fetchall()
+            wordlist = []
+            for i in range(len(result)): #iterate over all entrys we got from the SQL Statement
+                word_de = result[i][0]
+                word_id = result[i][1]
+                # bulid json object, add it to the arraylist (wordlist)
+                json = {"de":word_de, "id":word_id}
+                wordlist.append(json)
+            return wordlist    
+
+
+        if(lang == 1):
+            select_wordlist_index = """ (SELECT word_en, entry_id FROM wordlists_entrys WHERE list_id = %s) """ 
+            cursor.execute(select_wordlist_index, list_id)
+            result = cursor.fetchall()
+
+            wordlist = []
+            for i in range(len(result)): #iterate over all entrys we got from the SQL Statement
+                word_en = result[i][0]
+                word_id = result[i][1]
+                # bulid json object, add it to the arraylist (wordlist)
+                json = {"en":word_en, "id":word_id}
+                wordlist.append(json)
+            return wordlist  
+    else:
+        select_wordlist_index = """ (SELECT * FROM wordlists_entrys WHERE list_id = %s) """ 
+        cursor.execute(select_wordlist_index, list_id)
+        result = cursor.fetchall()
+            
+        wordlist = []
+        for i in range(len(result)): #iterate over all entrys we got from the SQL Statement
+            word_en = result[i][1]
+            word_de = result[i][2]
+            word_id = result[i][3]
+            # bulid json object, add it to the arraylist (wordlist)
+            json = {"de":word_de, "en":word_en, "id":word_id}
+            wordlist.append(json)
+        return wordlist  
+
+
     
-    wordlist = []
-    for i in range(len(data)): #iterate over all entrys we got from the SQL Statement
-        word_en = data[i][1]
-        word_de = data[i][2]
-        word_id = data[i][3]
-        # bulid json object, add it to the arraylist (wordlist)
-        json = {"en":word_en, "de":word_de, "id":word_id}
-        wordlist.append(json)
 
-
-    return wordlist    
 
 
 def saveWordlist(user_id, user_name, list_name, wordlist=0,):
@@ -327,7 +428,7 @@ def updateSingleEntry(data, user_id):
 
 
 def deleteList(list_id, user_id):
-    data = getEntrys(list_id)
+    data = getListByID(list_id)
 
     # iterate over list, delete one after another
     for i in range(len(data)):
