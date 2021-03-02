@@ -6,9 +6,11 @@
       <div v-for="word in words" :key="word.id">
         <v-container>
           <v-row>
-            <v-col md=1>
+            <v-col md=3>
             
-             {{ word.de }}       
+              <p class="fix_line">
+                {{ word.de }}       
+              </p>   
             </v-col>
             <v-col md=4>
            
@@ -38,9 +40,11 @@
       <div v-for="word in words" :key="word.id">
         <v-container>
           <v-row>
-            <v-col md=1>
-            
-             {{ word.en }}       
+            <v-col md=3>
+              <p class="fix_line">
+                {{ word.en }}       
+              </p>
+             
             </v-col>
             <v-col md=4>
            
@@ -128,6 +132,9 @@ export default {
 
 </script>
 
-<style>
+<style scoped>
+.fix_line{
+  word-break: break-all;
+}
 
 </style>
