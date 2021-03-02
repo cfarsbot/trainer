@@ -1,7 +1,6 @@
 <template>
   <v-card tile>
     <v-list dense>
-      <v-subheader>Deine Wörterlisten</v-subheader>
       <v-list-item-group
         v-model="selectedItem"
         color="primary"
@@ -11,7 +10,7 @@
           :key="i"
         >
           <v-list-item-content>
-            <v-list-item-title v-text="entry.list_name"></v-list-item-title>
+            <v-list-item-title v-text="entry"></v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list-item-group>
@@ -21,7 +20,7 @@
 </template>
 <script>
 export default {
-  props: ['entrys', 'label'],
+  props: ['entrys'],
   watch:{
     selectedItem:{
       handler(){

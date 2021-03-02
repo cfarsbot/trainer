@@ -7,6 +7,7 @@ import Register from '../views/Register.vue'
 // Requires Authentication
 import Home from '../views/Home.vue'
 import Play from '../views/Play.vue'
+import Statistics from '../views/Statistics.vue'
 
 // Store 
 import user_store from '../store/user.js'
@@ -33,6 +34,12 @@ const routes = [
     path: '/play',
     name: 'Play',
     component: Play,
+    meta: {requiresAuth: true},
+  },
+  {
+    path: '/statistics',
+    name: 'Statistics',
+    component: Statistics,
     meta: {requiresAuth: true}
   }
 ]

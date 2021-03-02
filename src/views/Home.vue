@@ -96,6 +96,7 @@
 
 <script>
 import axios from 'axios'
+import config from '../../config'
 
 import Navigation from '../components/navigation.vue'
 import List from '../components/basic_list.vue'
@@ -187,7 +188,7 @@ export default {
         var user = user_store.getters.user
         console.log(data)
         if(data != ""){
-          axios.put('http://127.0.0.1:5000/create_wordlist', {
+          axios.put(`${config.protocol}://${config.hostname}/create_wordlist`, {
             headers: {'Content-Type': 'application/json'},
             data,
             user,
@@ -204,7 +205,7 @@ export default {
       // list_id: id of the list about to be deleted
       deleteList(list_id){
         var user = user_store.getters.user
-          axios.delete('http://127.0.0.1:5000/wordlist', {                        
+          axios.delete(`${config.protocol}://${config.hostname}/wordlist`, {                        
             data:{ list_id, user}
             })
             .then( response => {
@@ -217,7 +218,7 @@ export default {
 
       getList(){
         var user = user_store.getters.user
-        axios.post('http://127.0.0.1:5000/wordlist', {
+        axios.post(`${config.protocol}://${config.hostname}/wordlist`, {
           headers: {'Content-Type': 'application/json'},
           user
           })
