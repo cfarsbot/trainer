@@ -10,8 +10,6 @@ from random import randrange
 import random
 from flask_cors import CORS, cross_origin
 
-
-
 from auth import auth
 app = Flask(__name__)
 cors = CORS(app)
@@ -31,10 +29,6 @@ mysql.init_app(app)
 
 conn = mysql.connect()
 cursor =conn.cursor()
-
-
-
-
 
 app.register_blueprint(auth)
 
@@ -83,9 +77,9 @@ def route_getWordList():
         user_id = body['user']['id']
     except:
         return "error", 403
-    if request.method == 'POST':     
-        exists_wordlist = """ SELECT EXISTS(SELECT * FROM wordlists_index WHERE creator_id = %s);"""
+    if request.method == 'POST':
 
+        exists_wordlist = """ SELECT EXISTS(SELECT * FROM wordlists_index WHERE creator_id = %s);"""
         cursor.execute(exists_wordlist, user_id)
         result = cursor.fetchone()[0]
             
@@ -104,6 +98,28 @@ def route_getWordList():
             return getWordlist(user_id)
         except:
             return "Error", 400
+
+
+@app.route('/stats', methods=['POST'])
+def stats():
+    
+        body = request.get_json()
+        user_id = body['user']['id']
+
+        if request.method == 'POST':
+            select_meta = """ select list_id, list_name, count_correct, count_false FROM wordlists_index natural join wordlists_meta WHERE user_id = %s """
+            cursor.execute(select_meta, user_id)
+            result = cursor.fetchall()
+
+            final = []
+            for row in result:
+                print(row)
+
+                json = {"list_id":row[0], "list_name": row[1], "count_correct": row[2], "count_false": row[3]}
+                final.append(json)
+            
+        return jsonify(final)
+
         
             
 
@@ -128,12 +144,17 @@ def validate_de():
     try:
         body = request.get_json()
         words = body['words']
+        user = body['user']
+        user_id = user['id']
     except:
         return "error", 401
     if request.method == 'POST':
-        print(body)
+        print(user)
         print("Validate DE")
         validation = []
+
+        idx_correct = 0
+        idx_false = 0
 
         for word in words:
             toCheck = word
@@ -144,10 +165,14 @@ def validate_de():
                 print("correct")
                 json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':True}
                 validation.append(json)
+                idx_correct += 1
             if(word['de'] != solution): # userinput isn't correct
                 print("wrong")
                 json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':False}
                 validation.append(json)
+                idx_false += 1
+    updateUserStats(user, idx_correct, idx_false)
+    createMetaData(user_id,list_id, idx_correct, idx_false)
 
         
     return jsonify(validation), 200
@@ -158,12 +183,18 @@ def validate_en():
     try:
         body = request.get_json()
         words = body['words']
+        user = body['user']
+        user_id = user['id']
+        list_id = body['list_id']
     except:
         return "error", 401
     if request.method == 'POST':
         print(body)
         print("Validate EN")
         validation = []
+
+        idx_correct = 0
+        idx_false = 0
 
         for word in words:
             toCheck = word
@@ -175,22 +206,19 @@ def validate_en():
                 print("correct")
                 json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':True}
                 validation.append(json)
+                idx_correct += 1
             if(word['en'] != solution): # userinput isn't correct
                 print("wrong")
                 json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':False}
                 validation.append(json)
-
+                idx_false += 1
+    updateUserStats(user, idx_correct, idx_false)                
+    createMetaData(user_id,list_id, idx_correct, idx_false)
         
     return jsonify(validation), 200
-
-       # getWordByID()
-        # we wanna check if the English input is correct
-
-
             
 
 @app.route('/create_wordlist', methods=['POST', 'PUT'])
-@cross_origin()
 def createWordlist():
     try:
         body = request.get_json()
@@ -219,7 +247,23 @@ def createWordlist():
 
     
 
+def createMetaData(user_id, list_id, idx_correct, idx_false):
 
+    exists_wordlist = """ SELECT EXISTS(SELECT * FROM wordlists_meta WHERE list_id = %s);"""
+    cursor.execute(exists_wordlist, list_id)
+    result = cursor.fetchone()[0]
+    if( result == 0): #no list found
+        print("no list found, updating")
+        insert_meta = """INSERT INTO wordlists_meta (user_id,list_id,count_correct,count_false) VALUES (%s, %s, %s, %s); """
+        data = (user_id, list_id, idx_correct, idx_false)
+        cursor.execute(insert_meta, data)
+        conn.commit()
+    else: #list found, update existing
+        print("Wordlist exists, updating")
+        update_stats = """ UPDATE wordlists_meta SET count_correct = %s, count_false= %s WHERE list_id = %s """
+        data = (idx_correct, idx_false, list_id)
+        cursor.execute(update_stats, data)
+        conn.commit()
 
 
 
@@ -228,6 +272,16 @@ def getWordByID(word_id):
     cursor.execute(select_word, word_id)
     result = cursor.fetchall()[0]
     return result
+
+def updateUserStats(user,idx_correct, idx_false):
+    print(user)
+    user_id = user['id']
+    currentCorrect = user['Count_Correct']
+    currentFalse = user['Count_False']
+    update_stats = """ UPDATE user SET Count_Correct = %s, Count_False= %s WHERE id = %s """
+    data = (currentCorrect + idx_correct, currentFalse + idx_false, user_id)
+    cursor.execute(update_stats, data)
+    conn.commit()
 
 
 def getWordlist(user_id):
@@ -287,6 +341,7 @@ def getListByID(list_id, lang=None):
             return wordlist  
     else:
         select_wordlist_index = """ (SELECT * FROM wordlists_entrys WHERE list_id = %s) """ 
+
         cursor.execute(select_wordlist_index, list_id)
         result = cursor.fetchall()
             
