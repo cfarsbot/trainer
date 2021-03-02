@@ -35,6 +35,8 @@ def updateWordlist():
         user_id = body['user']['id']
     except:
         return "Error", 400
+
+
     if request.method == 'PATCH':
         try:
             data = body['word']
@@ -43,6 +45,10 @@ def updateWordlist():
 
         updateSingleEntry(data, user_id)
         return "correct", 200
+
+
+
+
     if request.method == 'PUT':
         try:
             en = body['word']['en']
@@ -53,6 +59,10 @@ def updateWordlist():
             return getWordlist(user_id), 200
         except:
             return "Error", 400
+
+
+
+
     if request.method == 'DELETE':
         try:
             word_id = body['word']['id']
@@ -63,6 +73,10 @@ def updateWordlist():
         except:
             return "Error", 400  
 
+
+
+
+
 @app.route('/wordlist', methods=['POST', 'DELETE'])
 @cross_origin()
 def route_getWordList():
@@ -70,7 +84,9 @@ def route_getWordList():
     try:
         user_id = body['user']['id']
     except:
-        return "error", 403
+        return "error", 400
+
+
     if request.method == 'POST':
 
         exists_wordlist = """ SELECT EXISTS(SELECT * FROM wordlists_index WHERE creator_id = %s);"""
@@ -85,6 +101,8 @@ def route_getWordList():
             print("list found")
             return getWordlist(user_id)
 
+
+
     if request.method == 'DELETE':
         try:
             list_id = body['list_id']
@@ -94,14 +112,15 @@ def route_getWordList():
             return "Error", 400
 
 
-@app.route('/stats', methods=['POST'])
+@app.route('/stats', methods=['POST']) #crashes inconsistently, no idea why
 def stats():
-    
+    try:
         body = request.get_json()
         user_id = body['user']['id']
-
+        print(body)
+        
         if request.method == 'POST':
-            select_meta = """ select list_id, list_name, count_correct, count_false FROM wordlists_index natural join wordlists_meta WHERE user_id = %s """
+            select_meta = """ SELECT list_id, list_name, count_correct, count_false FROM wordlists_index NATURAL JOIN wordlists_meta WHERE user_id = %s """
             cursor.execute(select_meta, user_id)
             result = cursor.fetchall()
 
@@ -111,12 +130,27 @@ def stats():
 
                 json = {"list_id":row[0], "list_name": row[1], "count_correct": row[2], "count_false": row[3]}
                 final.append(json)
+                del(result)
+            return jsonify(final)
+    except:
+        return "error", 400 
             
-        return jsonify(final)
+@app.route('/get_user', methods=['POST'])
+@cross_origin()
+def user():
+    if request.method == 'POST':
+        try:
+            body = request.get_json()
+            print(body)
+            user_id = body['user']['id']
+            print(user_id)
+            return getUser(user_id), 200
+
+
+        except:
+            return "error", 400
 
         
-            
-
 
 @app.route('/play_wordlist', methods=['POST'])
 @cross_origin()
@@ -140,36 +174,52 @@ def validate_de():
         words = body['words']
         user = body['user']
         user_id = user['id']
+        list_id = body['list_id']
+        print(body)
+    
+        if request.method == 'POST':
+            print(user)
+            print("Validate DE")
+            validation = []
+
+            idx_correct = 0
+            idx_false = 0
+
+            for word in words:
+                
+
+                toCheck = word
+                word_de = word['de']
+                # get array of the correct word
+                correct = getWordByID(toCheck['id'])
+                solution_en = correct[1] # correct[1] = english word returned from DB            
+                solution_de = correct[2] # correct[2] = german word returned from DB
+
+
+                if(word['de'] == solution_de): # userinput is correct
+                    print("correct")
+                    json = {'de':solution_de, 'en':solution_en, 'id':word['id'], 'result':True}
+                    validation.append(json)
+                    idx_correct += 1
+
+
+                if(word['de'] != solution_de): # userinput isn't correct
+                    print("wrong")
+                    json = {'de':solution_de, 'en':solution_en, 'id':word['id'], 'result':False}
+                    validation.append(json)
+                    idx_false += 1
+
+            updateUserStats(user, idx_correct, idx_false)
+            createMetaData(user_id,list_id, idx_correct, idx_false)
+        
+        return jsonify(validation), 200
     except:
         return "error", 401
-    if request.method == 'POST':
-        print(user)
-        print("Validate DE")
-        validation = []
+                
 
-        idx_correct = 0
-        idx_false = 0
+    
 
-        for word in words:
-            toCheck = word
-            # get array of the correct word
-            correct = getWordByID(toCheck['id'])
-            solution = correct[2] # correct[1] = german word returned from DB
-            if(word['de'] == solution): # userinput is correct
-                print("correct")
-                json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':True}
-                validation.append(json)
-                idx_correct += 1
-            if(word['de'] != solution): # userinput isn't correct
-                print("wrong")
-                json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':False}
-                validation.append(json)
-                idx_false += 1
-    updateUserStats(user, idx_correct, idx_false)
-    createMetaData(user_id,list_id, idx_correct, idx_false)
 
-        
-    return jsonify(validation), 200
 
 @app.route('/validate_en', methods=['POST'])
 @cross_origin()
@@ -180,36 +230,48 @@ def validate_en():
         user = body['user']
         user_id = user['id']
         list_id = body['list_id']
-    except:
-        return "error", 401
-    if request.method == 'POST':
-        print(body)
-        print("Validate EN")
-        validation = []
 
-        idx_correct = 0
-        idx_false = 0
 
-        for word in words:
-            toCheck = word
-            # get array of the correct word
-            correct = getWordByID(toCheck['id'])
-            solution = correct[1]
-            # correct[1] = english word returned from DB
-            if(word['en'] == solution): # userinput is correct
-                print("correct")
-                json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':True}
-                validation.append(json)
-                idx_correct += 1
-            if(word['en'] != solution): # userinput isn't correct
-                print("wrong")
-                json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':False}
-                validation.append(json)
-                idx_false += 1
-    updateUserStats(user, idx_correct, idx_false)                
-    createMetaData(user_id,list_id, idx_correct, idx_false)
+
+        if request.method == 'POST':
+            print(body)
+            print("Validate EN")
+            validation = []
+
+            idx_correct = 0
+            idx_false = 0
+
+            for word in words:
+                word_en = word['en']
+                toCheck = word
+                # get array of the correct word
+                correct = getWordByID(toCheck['id'])
+                solution_en = correct[1]# correct[1] = english word returned from DB
+                solution_de = correct[2] # correct[2] = german word returned from DB
+                if(word_en == solution_en): # userinput is correct
+                    print("correct")
+                    json = {'de':word['de'], 'en':word['en'], 'id':word['id'], 'result':True}
+                    validation.append(json)
+                    idx_correct += 1
+
+
+                if(word_en != solution_en): # userinput isn't correct
+                    print("wrong")
+                    json = {'de':solution_de, 'en':solution_en, 'id':word['id'], 'result':False}
+                    validation.append(json)
+                    idx_false += 1
+            
+
+            updateUserStats(user, idx_correct, idx_false)                
+            createMetaData(user_id,list_id, idx_correct, idx_false)
+   
+
         
-    return jsonify(validation), 200
+        return jsonify(validation), 200
+            
+    except:
+        return "error", 400
+
             
 
 @app.route('/create_wordlist', methods=['POST', 'PUT'])
@@ -221,6 +283,8 @@ def createWordlist():
         user_name = user['name']
     except:
         return "Error", 400
+
+
     if request.method == 'POST': # creates a full Wordlist with words in it
         try:
             list_name = body['listname']
@@ -228,6 +292,7 @@ def createWordlist():
             saveWordlist(user_id, user_name, list_name, wordlist)
         except:
             return "Error", 400
+
 
     if request.method == 'PUT': # creates only a Wordlist header, response is only a new generated id for the array of words
         # axios only sends put requests, if the data is inside the data Object..
@@ -246,12 +311,16 @@ def createMetaData(user_id, list_id, idx_correct, idx_false):
     exists_wordlist = """ SELECT EXISTS(SELECT * FROM wordlists_meta WHERE list_id = %s);"""
     cursor.execute(exists_wordlist, list_id)
     result = cursor.fetchone()[0]
+
+
     if( result == 0): #no list found
         print("no list found, updating")
         insert_meta = """INSERT INTO wordlists_meta (user_id,list_id,count_correct,count_false) VALUES (%s, %s, %s, %s); """
         data = (user_id, list_id, idx_correct, idx_false)
         cursor.execute(insert_meta, data)
         conn.commit()
+
+
     else: #list found, update existing
         print("Wordlist exists, updating")
         update_stats = """ UPDATE wordlists_meta SET count_correct = %s, count_false= %s WHERE list_id = %s """
@@ -272,6 +341,8 @@ def updateUserStats(user,idx_correct, idx_false):
     user_id = user['id']
     currentCorrect = user['Count_Correct']
     currentFalse = user['Count_False']
+
+
     update_stats = """ UPDATE user SET Count_Correct = %s, Count_False= %s WHERE id = %s """
     data = (currentCorrect + idx_correct, currentFalse + idx_false, user_id)
     cursor.execute(update_stats, data)
@@ -296,58 +367,10 @@ def getWordlist(user_id):
         final_wordlist.append(json)
         
 
-    print(final_wordlist)
-         
+    print(final_wordlist)         
     return jsonify(final_wordlist)
 
 
-def getListByID(list_id, lang=None):
-   
-    selected_lang = "*"
-    if(lang != None):
-        if(lang == 0):
-            select_wordlist_index = """ (SELECT word_de, entry_id FROM wordlists_entrys WHERE list_id = %s) """
-            cursor.execute(select_wordlist_index, list_id)
-            result = cursor.fetchall()
-
-            wordlist = []
-            for i in range(len(result)): #iterate over all entrys we got from the SQL Statement
-                word_de = result[i][0]
-                word_id = result[i][1]
-                # bulid json object, add it to the arraylist (wordlist)
-                json = {"de":word_de, "id":word_id}
-                wordlist.append(json)
-            return wordlist    
-
-
-        if(lang == 1):
-            select_wordlist_index = """ (SELECT word_en, entry_id FROM wordlists_entrys WHERE list_id = %s) """ 
-            cursor.execute(select_wordlist_index, list_id)
-            result = cursor.fetchall()
-
-            wordlist = []
-            for i in range(len(result)): #iterate over all entrys we got from the SQL Statement
-                word_en = result[i][0]
-                word_id = result[i][1]
-                # bulid json object, add it to the arraylist (wordlist)
-                json = {"en":word_en, "id":word_id}
-                wordlist.append(json)
-            return wordlist  
-    else:
-        select_wordlist_index = """ (SELECT * FROM wordlists_entrys WHERE list_id = %s) """ 
-
-        cursor.execute(select_wordlist_index, list_id)
-        result = cursor.fetchall()
-            
-        wordlist = []
-        for i in range(len(result)): #iterate over all entrys we got from the SQL Statement
-            word_en = result[i][1]
-            word_de = result[i][2]
-            word_id = result[i][3]
-            # bulid json object, add it to the arraylist (wordlist)
-            json = {"de":word_de, "en":word_en, "id":word_id}
-            wordlist.append(json)
-        return wordlist  
 
 
 @app.route('/login', methods=["POST"])
@@ -378,17 +401,8 @@ def login():
                 # if password is valid
                 if(checkPassword(password, credentials)):
                     # get user entry and bulid it to a JSON Object
-                    select_user = """ (SELECT * FROM user WHERE id = %s); """
-                    cursor.execute(select_user, user_id)
-                    result = cursor.fetchall()[0]
-                    user = []
-
-                    for col in result:
-                        user.append(col)
-
-                    # user[5] (id) should be encrypted because it is used in request bodys to identify the user
-                    user_json = {"email":user[0], "name":user[1], "Lang_DE":user[2], "Count_Correct":user[3], "Count_False":user[4], "id":user[5]}
-                    return user_json, 200, {'ContentType':'application/json'}
+                    
+                    return getUser(user_id), 200, {'ContentType':'application/json'}
                 
                 else:
                     return {'login':False}, 403, {'ContentType':'application/json'}
@@ -396,7 +410,21 @@ def login():
             else:
                 return {'login':False}, 403, {'ContentType':'application/json'}
         except:
-            return "Error", 400     
+            return "Error", 400
+
+
+def getUser(user_id):
+
+    select_user = """ (SELECT * FROM user WHERE id = %s); """
+    cursor.execute(select_user, user_id)
+    result = cursor.fetchall()[0]
+    user = []
+    for col in result:
+        user.append(col)
+
+                    # user[5] (id) should be encrypted because it is used in request bodys to identify the user
+    user_json = {"email":user[0], "name":user[1], "Lang_DE":user[2], "Count_Correct":user[3], "Count_False":user[4], "id":user[5]}
+    return user_json
 
 def checkPassword(password, hashed):   
     if(bcrypt.checkpw(password.encode('utf8'),hashed.encode('utf8'))):
@@ -455,6 +483,51 @@ def register():
         return ({'success':True}), 200, {'ContentType':'application/json'} 
 
 
+def getListByID(list_id, lang=None):
+   
+    if(lang != None): # return only DE or EN words
+        if(lang == 0): # return only DE words
+            select_wordlist_index = """ (SELECT word_de, entry_id FROM wordlists_entrys WHERE list_id = %s) """
+            cursor.execute(select_wordlist_index, list_id)
+            result = cursor.fetchall()
+
+            wordlist = []
+            for i in range(len(result)): #iterate over all entrys we got from the SQL Statement
+                word_de = result[i][0]
+                word_id = result[i][1]
+                # bulid json object, add it to the arraylist (wordlist)
+                json = {"de":word_de, "id":word_id}
+                wordlist.append(json)
+            return wordlist    
+
+
+        if(lang == 1): # return only EN words
+            select_wordlist_index = """ (SELECT word_en, entry_id FROM wordlists_entrys WHERE list_id = %s) """ 
+            cursor.execute(select_wordlist_index, list_id)
+            result = cursor.fetchall()
+
+            wordlist = []
+            for i in range(len(result)): #iterate over all entrys we got from the SQL Statement
+                word_en = result[i][0]
+                word_id = result[i][1]
+                # bulid json object, add it to the arraylist (wordlist)
+                json = {"en":word_en, "id":word_id}
+                wordlist.append(json)
+            return wordlist  
+    else: # return both EN and DE words
+        select_wordlist_index = """ (SELECT * FROM wordlists_entrys WHERE list_id = %s) """ 
+        cursor.execute(select_wordlist_index, list_id)
+        result = cursor.fetchall()
+            
+        wordlist = []
+        for i in range(len(result)): #iterate over all entrys we got from the SQL Statement
+            word_en = result[i][1]
+            word_de = result[i][2]
+            word_id = result[i][3]
+            # bulid json object, add it to the arraylist (wordlist)
+            json = {"de":word_de, "en":word_en, "id":word_id}
+            wordlist.append(json)
+        return wordlist  
 
 def generatePassword(password):
     salt = bcrypt.gensalt()
@@ -525,7 +598,7 @@ def ownEntry(word_id, user_id):
 
     # ich glaube hier ist ein logischer fehler, weil immer nur nach einer list_id geguckt wird und nicht, ob
     # word_id in der gefundenen list_id ist.
-    # ich weiß also nicht, ob word_it in list_id ist. Ich weiß nur, dass der nutzer eine Liste besitzt
+    # ich weiß also nicht, ob word_id in list_id ist. Ich weiß nur, dass der nutzer eine Liste besitzt
     # Hab jetzt aber keine zeit mehr das zu fixen
 
     exists_wordlist = """ SELECT EXISTS(SELECT * FROM wordlists_index WHERE creator_id = %s AND list_id = %s);"""
