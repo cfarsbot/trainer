@@ -15,6 +15,12 @@
             </v-btn>
         </router-link>
 
+        <router-link to="/statistics">
+            <v-btn text>
+                Statistiken
+            </v-btn>
+        </router-link>
+
     </v-app-bar>
 </template>
 

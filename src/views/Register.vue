@@ -11,6 +11,7 @@
         <v-col class="col-md-10 ">
           <router-link to="/login">
             <v-btn @click="save">Registrieren</v-btn>
+            {{ user }}
           </router-link>
         </v-col>
       </v-row>
@@ -62,7 +63,7 @@ export default {
     post_register(user){
       if( !(user.password == "" || user.email == "" || user.name == "")){
         console.log(user)
-        axios.post(`https://${config.hostname}/register`, {
+        axios.post(`${config.protocol}://${config.hostname}/register`, {
           headers: {'Content-Type': 'application/json'},
           user
         })

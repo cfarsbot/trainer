@@ -1,3 +1,4 @@
 export default {
-    hostname: 'backend.farsbot.de'
+    hostname: '127.0.0.1:5000',
+    protocol: 'http'
 }

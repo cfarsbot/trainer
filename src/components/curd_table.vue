@@ -191,7 +191,7 @@ import user_store from '../store/user'
 
       updateWord(word){
         var user = user_store.getters.user
-          axios.patch(`https://${config.hostname}/update_wordlist`, {
+          axios.patch(`${config.protocol}://${config.hostname}/update_wordlist`, {
                         headers: {'Content-Type': 'application/json'},
                         word,
                         user
@@ -209,7 +209,7 @@ import user_store from '../store/user'
       // creates event to update the component
       addWord(word, list_id){
         var user = user_store.getters.user
-        axios.put(`https://${config.hostname}/update_wordlist`, {
+        axios.put(`${config.protocol}://${config.hostname}/update_wordlist`, {
           
                         headers: {'Content-Type': 'application/json'},
                         word,
@@ -233,7 +233,7 @@ import user_store from '../store/user'
         var user = user_store.getters.user
                 // axios wants the data to be deleted inside the data Object... https://stackoverflow.com/a/53263784
                 console.log(word)
-                axios.delete(`https://${config.hostname}/update_wordlist`, {                        
+                axios.delete(`${config.protocol}://${config.hostname}/update_wordlist`, {                        
                         data:{
                           user,
                           word

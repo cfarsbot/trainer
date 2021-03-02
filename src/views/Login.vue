@@ -61,7 +61,7 @@ import config from '../../config';
     post_login: function(user){
     
       if( !(user.password == "" || user.email == "")){
-        axios.post(`https://${config.hostname}/login`, {
+        axios.post(`${config.protocol}://${config.hostname}/login`, {
           headers: {'Content-Type': 'application/json'},
             user
           })
