@@ -68,9 +68,10 @@ mounted(){
 },
 methods: {
     buildStats(){
-        this.user = user_store.getters.user
+      this.getStats()
+      this.user = user_store.getters.user
         
-        this.getStats()
+
     },
     getStats(){
         var user = user_store.getters.user
@@ -82,6 +83,19 @@ methods: {
             .then( response => {
                 console.log(response.data)
                 this.stats_list = response.data
+            })
+            .catch(function (error) {
+              console.log(error)
+            });
+
+            console.log(user)
+            axios.post(`${config.protocol}://${config.hostname}/get_user`, {
+            headers: {'Content-Type': 'application/json'},
+            user,
+            })
+            .then( response => {
+                console.log(response.data)
+                user_store.commit('saveUser', response.data)
             })
             .catch(function (error) {
               console.log(error)

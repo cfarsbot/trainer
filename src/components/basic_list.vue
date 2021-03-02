@@ -21,7 +21,7 @@
 </template>
 <script>
 export default {
-  props: ['entrys'],
+  props: ['entrys', 'label'],
   watch:{
     selectedItem:{
       handler(){

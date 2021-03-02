@@ -1,8 +1,6 @@
 <template>
   <div>
-    {{ words }}
-    {{ list_id }}
-
+    
 
     <div v-if="lang === 0">
       <div v-for="word in words" :key="word.id">
@@ -68,7 +66,12 @@
         </v-container>
       </div>
     </div>
- <v-btn @click="save">Fertig</v-btn>   
+    <v-row>
+      <v-col offset-md="1" md="1">
+        <v-btn @click="save" color="green" dark>Fertig</v-btn>
+      </v-col>
+    </v-row>
+    
   </div>
   
   
@@ -120,8 +123,9 @@ export default {
         });
 
     }
-  } 
-}
+  }
+  }
+
 </script>
 
 <style>

@@ -1,6 +1,15 @@
 <template>
   <div>
-    <v-text-field v-model="password" class=col-md-12 label="Password" hide-details="auto" @input="sendPassword"></v-text-field>         
+
+         <v-text-field v-model="password"   
+         class="col-md-12"          
+            label="Passwort"
+            hide-details="auto"
+            @input="sendPassword"
+            :append-icon="showInput ? 'mdi-eye' : 'mdi-eye-off'"
+            @click:append="showInput = !showInput"
+            :type="showInput ? 'text' : 'password'">
+            </v-text-field>       
   </div>
 </template>
 
@@ -10,7 +19,8 @@ export default {
     name:"password",
     data(){
       return{
-        password: "",    
+        password: "",
+        showInput: false,    
         }
     },
     methods:{

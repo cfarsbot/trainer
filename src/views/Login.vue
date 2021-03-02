@@ -17,7 +17,6 @@
                 </v-col>
             </v-row>
         </v-col>
-   
     </v-row>
 </template>
 
@@ -68,6 +67,7 @@ import config from '../../config';
           .then( response => {
             console.log(response.data);
             user_store.commit('saveUser', response.data)
+            
             if(response.data.email != ""){
               this.$router.push('/')
             }else{

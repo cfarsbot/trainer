@@ -4,10 +4,9 @@
     <v-container fluid>
       <v-row no-gutters>
         <v-col md="2">
-          Welche Sprache willst du dich Testen?
+          In welcher Sprache willst du dich Testen?
         
-        
-            <!-- Wordlists -->
+
             <Menu class="mt-4" :entrys="supported_lang" @selected-item="SelectionLangHandler"/>
             <List class="mt-4" :entrys="content" @selected-item="SelectionListHandler"/>
              
@@ -19,8 +18,11 @@
           dark
           >Start</v-btn>
         </v-col>
-        <v-col md="10">
+        <v-col v-if="showPlayCard" md="10">
           <Play :words="play_list" :list_id="list_id" :lang="selected_lang" :showResults="showResults"/>
+        </v-col>
+        <v-col v-else md="10">
+          Bitte wähle eine Sprache sowie eine Liste aus und drücke Start
         </v-col>
       </v-row>
     </v-container>
@@ -51,7 +53,8 @@ import Play from '../components/play_words'
       list_id: "",
       supported_lang: ['Deutsch', 'Englisch'],
       selected_lang: "",
-      showResults: false
+      showResults: false,
+      showPlayCard: false
       }
   },
 
@@ -59,6 +62,7 @@ import Play from '../components/play_words'
 
     submit(){
       if(this.list_id != "" || this.selected_lang != ""){
+        
         this.getPlaylist(this.list_id, this.selected_lang)
        
       }
@@ -103,6 +107,7 @@ import Play from '../components/play_words'
         })
         .then( response => {
           console.log(response.data)
+          this.showPlayCard = true
           this.play_list = response.data
         })
         .catch(function (error) {

@@ -1,7 +1,6 @@
 <template>
   <v-card tile>
     <v-list dense>
-      <v-subheader>Deine Wörterlisten</v-subheader>
       <v-list-item-group
         v-model="selectedItem"
         color="primary"
