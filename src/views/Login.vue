@@ -15,7 +15,7 @@
                     <router-link to="/register">
                         <v-btn>Registrieren</v-btn>
                     </router-link>
-                  <v-list-item href="https://netcup.de" target="_blank">Netcup Reflink</v-list-item>
+                  <v-btn @click="ref">Reflink</v-btn>
 
 
                 </v-col>
@@ -50,6 +50,9 @@ import config from '../../config';
     Password
   },
   methods: {
+    ref(){
+      window.open('https://www.netcup.de');
+    },
 
     emailHandler(email){
       this.user.email = email;
